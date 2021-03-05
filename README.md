@@ -3,4 +3,4 @@
 
 ## Code type: Application software
 
-### Code Description: A software developed to assist in a web-scraping task.
+### Code description: A software developed to assist in a web-scraping task.
