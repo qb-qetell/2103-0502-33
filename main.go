@@ -7,18 +7,18 @@ import (
 	"github.com/inancgumus/screen"
 )
 
-func main() {
+func main () {
 	// Clear all the characters on the screen
-	screen.Clear()
+	screen.Clear ()
 
 	for {
 		screen.Clear ()
 		// Moves the cursor to the top-left position of the screen
-		screen.MoveTopLeft()
+		screen.MoveTopLeft ()
 
 		// Animate the time always in the same position
-		fmt.Println(time.Now())
+		fmt.Println (time.Now ())
 
-		time.Sleep(time.Second)
+		time.Sleep (time.Second)
 	}
 }
