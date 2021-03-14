@@ -202,6 +202,7 @@ Enter it here > `
 				_ := <- c
 				c <- [2]{"hl", ""}
 				_ := <- c
+				return
 			}
 
 			if lastPage == crrntKnwnLstPg {
@@ -247,6 +248,8 @@ Enter it here > `
 
 			c <- [2]{"hl", ""}
 			_ := <- c
+
+			return
 		}
 		if response360.StatusCode != http.StatusOK {
 			output380 := fmt.Sprintf ("Listing document page %d/%d: Listings on " +
@@ -257,6 +260,8 @@ Enter it here > `
 
 			c <- [2]{"hl", ""}
 			_ := <- c
+
+			return
 		}
 				
 		documentPart := html.NewTokenizer (response360.Body)
@@ -273,6 +278,8 @@ Enter it here > `
 				
 				c <- [2]{"hl", ""}
 				_ := <- c
+
+				return
 			}
 			
 			token := documentPart.Token ()
@@ -293,6 +300,8 @@ Enter it here > `
 				
 						c <- [2]{"hl", ""}
 						_ := <- c
+
+						return
 					}
 
 					token420 := documentPart.Token ()
@@ -332,10 +341,10 @@ Enter it here > `
 	_ := <- c
 
 	var (
-		listingInformation [][10]string = make ([][10]string)
+		listingInformation [][9]string = make ([][9]string)
 		// record_id, brand_name, model_name, year, transmission, condition, mileage,
 		// location, price, and listing url
-		listingImages map[string][]string
+		listingImages map[int][]string
 		
 		yrTrnsmssnMlgDS string
 		cndtnPrcDtSrc string
@@ -358,6 +367,8 @@ Enter it here > `
 
 			c <- [2]{"hl", ""}
 			_ := <- c
+
+			return
 		}
 		if response540.StatusCode != http.StatusOK {
 			output560 := fmt.Sprintf ("Listing %d/%d: Data from source fetching " +
@@ -367,10 +378,11 @@ Enter it here > `
 
 			c <- [2]{"hl", ""}
 			_ := <- c
+
+			return
 		}
 				
 		listing := html.NewTokenizer (response540.Body)
-		defer response540.Body.Close ()
 
 		for {
 			tokenType580 := listing.Next ()
@@ -384,6 +396,8 @@ Enter it here > `
 				
 				c <- [2]{"hl", ""}
 				_ := <- c
+
+				return
 			}
 
 			token600 := listing.Token ()
@@ -409,6 +423,8 @@ Enter it here > `
 						
 						c <- [2]{"hl", ""}
 						_ := <- c
+
+						return
 					}
 					
 					token640 := listing.Token ()
@@ -427,5 +443,322 @@ Enter it here > `
 
 					imageURLDataSrc = imageURLDataSrc + token.String ()
 				}
+				break
 			}
 		}
+
+		for {
+			tokenType660 := listing.Next ()
+			if tokenType660 == html.ErrorToken {
+				output660 := fmt.Sprintf ("Listing %d/%d: Data from source " +
+					"fetching failed: Unable to get next token: %s", k,
+					len (lstngGttngI), listing.Err.Error ())
+				
+				c <- [2]{"l3", output660}
+				_ := <- c
+				
+				c <- [2]{"hl", ""}
+				_ := <- c
+
+				return
+			}
+			
+			token600 := listing.Token ()
+
+			if token660.String () == "<!-- THIS PART HIDES ON MOBILE VERSION " +
+				"(ANOTHER COPY IS UNDER DETAIL PAGE SLIDER) -->"
+				break
+			}
+		}
+
+		rcrdYrTMDS := false
+		for {
+			tokenType680 := listing.Next ()
+			if tokenType680 == html.ErrorToken {
+				output680 := fmt.Sprintf ("Listing %d/%d: Data from source " +
+					"fetching failed: Unable to get next token: %s", k,
+					len (lstngGttngI), listing.Err.Error ())
+				
+				c <- [2]{"l3", output680}
+				_ := <- c
+				
+				c <- [2]{"hl", ""}
+				_ := <- c
+
+				return
+			}
+			
+			token680 := listing.Token ()
+
+			if token680.String () == "<!-- mb-3 -->" {
+				break
+			}
+
+			cndtnPrcDtSrc = cndtnPrcDtSrc + token680.String ()
+
+			continueToNext := false
+			for _, attribute700 := range token680.Attr {
+				if attribute700.Key == "class" &&
+					attribute700.Val == "text-fourteen text-muted" {
+					rcrdYrTMDS = true
+					continueToNext = true
+					break
+				}
+			}
+			if continueToNext == true {
+				continue
+			}
+
+			if rcrdYrTMDS == true {
+				yrTrnsmssnMlgDS = token680.String ()
+			}
+		}
+		
+		for {
+			tokenType720 := listing.Next ()
+			if tokenType720 == html.ErrorToken {
+				outpu720 := fmt.Sprintf ("Listing %d/%d: Data from source " +
+					"fetching failed: Unable to get next token: %s", k,
+					len (lstngGttngI), listing.Err.Error ())
+				
+				c <- [2]{"l3", output720}
+				_ := <- c
+				
+				c <- [2]{"hl", ""}
+				_ := <- c
+
+				return
+			}
+			token720 := listing.Token ()
+
+			targetAttrbtFnd740 := false
+			for _, attribute740 := range token720.Attr {
+				if attribute740.Key == "class" &&
+					attribute740.Val == "information_list" {
+					targetAttrbtFnd740 = true
+					break
+				}
+			}
+			
+			if targetAttrbtFnd740 == true {
+				for {
+					tokenType760 := listing.Next ()
+					if tokenType760 == html.ErrorToken {
+						outpu760 := fmt.Sprintf ("Listing %d/%d: Data " +
+							"from source fetching failed: Unable " +
+							"to get next token: %s", k,
+							len (lstngGttngI), listing.Err.Error ())
+						
+						c <- [2]{"l3", output760}
+						_ := <- c
+						
+						c <- [2]{"hl", ""}
+						_ := <- c
+
+						return
+					}
+					token760 := listing.Token ()
+
+					if token760.String () == "</ul>" {
+						break
+					}
+
+					locationDataSrc = locationDataSrc + token760.String ()
+				}
+				break
+			}
+		}
+		
+		response540.Body.Close ()
+
+		output820 := fmt.Sprintf ("Listing %d/%d: Data from source being saved", k,
+			len (onLstngGttngI))
+		c <- [2]{"l3", output820}
+		_ := <- c
+
+		var (
+			year string
+			transmission string
+			condition string
+			mileage string
+			location string
+			price string
+		)
+
+		r := regexp.MustCompile (`\d{4,4}\s*•\s*\w+\s*•\s*[\d,]+`)
+		importantPart := r.FindString (yrTrnsmssnMlgDS)
+		importantPart = strings.ReplaceAll (importantPart, " ", "")
+		importantPart = strings.ReplaceAll (importantPart, "	", "")
+		importantPart = strings.ReplaceAll (importantPart, "\r\n", "")
+		importantPart = strings.ReplaceAll (importantPart, "\n", "")
+		importantPart = strings.ReplaceAll (importantPart, ",", "")
+		threeData := strings.Split (importantPart, "•")
+		year = threeData [0]
+		transmission = strings.Title (threeData [1])
+		mileage = threeData [2]
+
+		r780 := regexp.MustCompile (`(Foreign|Nigerian) used`)
+		condition = r780.FindString (cndtnPrcDtSrc)
+
+		r790 := regexp.MustCompile (`₦ [\d,]+`)
+		price = r790.FindString (cndtnPrcDtSrc)
+		price = strings.ReplaceAll (price, "₦", "")
+		price = strings.ReplaceAll (price, " ", "")
+		price = strings.ReplaceAll (price, ",", "")
+
+		r800 := regexp.MustCompile (`C45( ,)?[\s\w]+`)
+		location = r800.FindString (locationDataSrc)
+		location = strings.ReplaceAll (location, "C45", "")
+		location = strings.ReplaceAll (location, " ", "")
+		location = strings.ReplaceAll (location, ",", "")
+		location = strings.ReplaceAll (location, "	", "")
+		location = strings.ReplaceAll (location, "\r\n", "")
+		location = strings.ReplaceAll (location, "\n", "")
+
+		r810 := regexp.MustCompile (` src="https:\/\/buy\.cars45\.com[\d\-_\/\w]+\." +
+			"(jpg|jpeg|png)`)
+		images := r810.FindAllString (imageURLDataSrc)
+		for l, _ := range images {
+			images [l] = strings.ReplaceAll (images [l], ` src="`, "")
+		}
+		
+		listingInformation = append (listingInformation, []{
+			dcmntPrtInfrmtn [0],
+			dcmntPrtInfrmtn [1],
+			year,
+			transmission,
+			condition,
+			mileage,
+			location,
+			price,
+			dcmntPrtInfrmtn [2],
+		}
+		
+		listingImages [len (listingInformation)] = images
+	}
+	
+	// ---- //
+	c <- [2]{"l2", "Result exporting"}
+	_ := <- c
+	
+	c <- [2]{"l3", "Result exporting: In progress"}
+	_ := <- c
+	
+	resultDatabase, err820 := sql.Open ("sqlite", filepath.Join (input200 + "/",
+		"result.db"))
+	if err820 != nil {
+		c <- [2]{"l3", "Result exporting: Failed: Database creation failed: " +
+			err820.Error ()}
+		_ := <- c
+		
+		c <- [2]{"hl", ""}
+		_ := <- c
+
+		return
+	}
+
+	_, err830 := resultDatabase.Exec (`create table listing (
+	record_id nchar (32) primary key,
+	brand_name varchar (32),
+	model_name varchar (32),
+	year nchar (4),
+	transmission varchar (16),
+	condition varchar (16),
+	mileage varchar (8),
+	location varchar (16),
+	price varchar(16),
+	source_url text
+);
+
+create table listing_picture (
+	record_id nchar (32) primary key,
+	listing_record_id nchar (32),
+	picture_url text,
+	foreign key (listing_record_id) references listing (record_id)
+);
+`)
+	if err830 != nil {
+		c <- [2]{"l3", "Result exporting: Failed: Database creation failed: " +
+			err830.Error ()}
+		_ := <- c
+		
+		c <- [2]{"hl", ""}
+		_ := <- c
+
+		return
+	}
+
+	for v, aListing := range listingInformation {
+		output832 := fmt.Sprintf ("Listing %d/%d: Details being saved", v,
+			len (listingInformation))
+		c <- [2]{"l3", output832}
+		_ := <- c
+		
+		record_id, err835 := str.UniquePredsafeStr (32)
+		if err835 != nil {
+			output835 := fmt.Sprintf ("Listing %d/%d: Saving failed: %s", v,
+				len (listingInformation), err835.Error ())
+			c <- [2]{"l3", output835}
+			_ := <- c
+			
+			c <- [2]{"hl", ""}
+			_ := <- c
+			
+			return
+		}
+		
+		_, err840 := resultDatabase.Exec (`insert into listing (
+			record_id, brand_name, model_name, year, transmission,
+			condition, mileage, location, price, source_url)
+			values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			record_id,
+			aListing [0],
+			aListing [1],
+			aListing [2],
+			aListing [3],
+			aListing [4],
+			aListing [5],
+			aListing [6],
+			aListing [7],
+			aListing [8]
+		)
+		
+		if err850 != nil {
+			output850 := fmt.Sprintf ("Listing %d/%d: Saving failed: %s", v,
+				len (listingInformation), err850.Error ())
+			c <- [2]{"l3", output850}
+			_ := <- c
+			
+			c <- [2]{"hl", ""}
+			_ := <- c
+			
+			return
+		}
+		
+		for _, picture := listingImages [v] {
+			_, err860 := resultDatabase.Exec (`insert into listing_picture (
+				record_id, listing_record_id, picture_url)
+				value (?, ?, ?)`,
+				record_id,
+				record_id,
+				picture
+			)
+
+			if err860 != nil {
+				output860 := fmt.Sprintf ("Listing %d/%d: Saving failed: %s", v,
+					len (listingInformation), err860.Error ())
+				c <- [2]{"l3", output860}
+				_ := <- c
+				
+				c <- [2]{"hl", ""}
+				_ := <- c
+				
+				return
+			}
+		}
+	}
+
+	// ---- //
+	c <- [2]{"l2", "Task completed"}
+	_ := <- c
+}
