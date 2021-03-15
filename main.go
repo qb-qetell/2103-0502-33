@@ -35,6 +35,7 @@ func main () {
 		}
 		
 		screen.Clear ()
+		screen.MoveTopLeft ()
 
 		fmt.Println (outputList [0] + "\n")
 
