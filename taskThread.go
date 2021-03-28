@@ -501,7 +501,7 @@ if fetchCFromCache == true {
 	}
 
 } else {
-	start := 1
+	start := 4401
 	complete := 400
 
 
@@ -888,7 +888,7 @@ if fetchCFromCache == true {
 	_ = <- c
 	
 	resultDatabase, err820 := sql.Open ("sqlite", filepath.Join (string (input200) + "/",
-		"result.db"))
+		"result-v2.db"))
 	if err820 != nil {
 		c <- [2]string{"l3", "Result exporting: Failed: Database creation failed: " +
 			err820.Error ()}
@@ -906,20 +906,22 @@ if fetchCFromCache == true {
 		model_name varchar (32),
 		year nchar (4),
 		transmission varchar (16),
-		condition varchar (16),
+		usage_condition varchar (16),
 		mileage varchar (8),
 		location varchar (16),
 		price varchar(16),
+		picture_url text,
 		source_url text
 	);
-	
+`)
+/*
 	create table if not exists listing_picture (
 		record_id nchar (32) primary key,
 		listing_record_id nchar (32),
 		picture_url text,
 		foreign key (listing_record_id) references listing (record_id)
 	);
-`)
+*/
 	if err830 != nil {
 		c <- [2]string{"l3", "Result exporting: Failed: Database creation failed: " +
 			err830.Error ()}
@@ -949,11 +951,16 @@ if fetchCFromCache == true {
 			
 			return
 		}
+
+		if len (listingImages [v + 1]) < 3 {
+			runtime.Gosched ()
+			continue
+		}
 		
 		_, err840 := resultDatabase.Exec (`insert into listing (
 			record_id, brand_name, model_name, year, transmission,
-			condition, mileage, location, price, source_url)
-			values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			usage_condition, mileage, location, price, picture_url, source_url)
+			values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			record_id,
 			aListing [0],
 			aListing [1],
@@ -963,6 +970,7 @@ if fetchCFromCache == true {
 			aListing [5],
 			aListing [6],
 			aListing [7],
+			listingImages [v + 1][2],
 			aListing [8],
 		)
 		
@@ -978,6 +986,7 @@ if fetchCFromCache == true {
 			return
 		}
 
+		/*
 		for _, picture := range listingImages [v + 1] {
 
 			record_id2, err888 := str.UniquePredsafeStr (32)
@@ -1011,7 +1020,7 @@ if fetchCFromCache == true {
 				
 				return
 			}
-		}
+		}*/
 	}
 
 	// ---- //
