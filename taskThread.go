@@ -174,7 +174,7 @@ if fetchAFromCache == true {
 				
 				lastPagenoOnPage := 1
 
-				url := fmt.Sprintf ("https://buy.cars45.com/cars" +
+				url := fmt.Sprintf ("https://buy.cars45.com.gh/cars" +
 					"?filter=%s&page=%d", listingDcmntId, page)
 				response, err240 := http.Get (url)
 
@@ -266,7 +266,7 @@ if fetchAFromCache == true {
 		
 		for x := 1; x <= lastPage; x ++ {
 			lstngDcumntsPRC := fmt.Sprintf ("https://" +
-				"buy.cars45.com/cars?filter=%s&page=%d",
+				"buy.cars45.com.gh/cars?filter=%s&page=%d",
 				strings.TrimLeft (documentsInfo [0], "0"), x)
 			lstngDcmntsPrtsI = append (lstngDcmntsPrtsI, [3]string{documentsInfo [1],
 				documentsInfo [2], lstngDcumntsPRC})
@@ -456,7 +456,7 @@ if fetchBFromCache == true {
 		imageURLDataSrc string
 	)
 
-	fetchCFromCache := true
+	fetchCFromCache := false
 
 if fetchCFromCache == true {
 	/* ---- */
@@ -501,7 +501,7 @@ if fetchCFromCache == true {
 	}
 
 } else {
-	start := 4401
+	start := 1
 	complete := 400
 
 
@@ -607,9 +607,10 @@ if fetchCFromCache == true {
 						return
 					}
 					token640 := listing.Token ()
-
+					// fmt.Println (token640.String () + "\n\n")
 					// <!-- detail_slider_wrap -->"
-					if token640.String () == "</button>" {
+					//</button>
+					if token640.String () == "<!-- /Detail slider -->" {
 						break
 					}
 
@@ -648,6 +649,9 @@ if fetchCFromCache == true {
 		for {
 			tokenType680 := listing.Next ()
 			if tokenType680 == html.ErrorToken {
+				//return
+				//fmt.Println ("here")
+				//fmt.Println (listing.Token ().String () + "\n\n")
 				output680 := fmt.Sprintf ("Listing %d/%d: Data from source " +
 					"fetching failed 6: Unable to get next token: %s", k + 1,
 					complete, listing.Err ().Error ())
@@ -663,7 +667,8 @@ if fetchCFromCache == true {
 			
 			token680 := listing.Token ()
 
-			if token680.String () == "<!-- /car_views_label_wrap -->" {
+			// <!-- /car_views_label_wrap -->
+			if token680.String () == "<!-- mb-3 -->" {
 				break
 			}
 			
@@ -787,16 +792,16 @@ if fetchCFromCache == true {
 		transmission = strings.Title (threeData [1])
 		mileage = threeData [2]
 
-		r780 := regexp.MustCompile (`((Foreign|Nigerian) used|New)`)
+		r780 := regexp.MustCompile (`((Foreign|Ghanian) used|New)`)
 		condition = r780.FindString (cndtnPrcDtSrc)
 
-		r790 := regexp.MustCompile (`₦ [\d,]+`)
+		r790 := regexp.MustCompile (`₵[\d,]+`)
 		price = r790.FindString (cndtnPrcDtSrc)
-		price = strings.ReplaceAll (price, "₦", "")
+		price = strings.ReplaceAll (price, "₵", "")
 		price = strings.ReplaceAll (price, " ", "")
 		price = strings.ReplaceAll (price, ",", "")
-		fmt.Println (price)
 
+		/*
 		r800 := regexp.MustCompile (`C45( ,)?[\s\w]+`)
 		location = r800.FindString (locationDataSrc)
 		location = strings.ReplaceAll (location, "C45", "")
@@ -804,9 +809,12 @@ if fetchCFromCache == true {
 		location = strings.ReplaceAll (location, ",", "")
 		location = strings.ReplaceAll (location, "	", "")
 		location = strings.ReplaceAll (location, "\r\n", "")
-		location = strings.ReplaceAll (location, "\n", "")
+		location = strings.ReplaceAll (location, "\n", "")*/
 
-		r810 := regexp.MustCompile (` src="https:\/\/buy\.cars45\.com[\d\-_\/\w]+\.` +
+		r800 := regexp.MustCompile (`(Tema|Accra|Takoradi|Kumasi)`)
+		location = r800.FindString (locationDataSrc)
+
+		r810 := regexp.MustCompile (` src="https:\/\/buy\.cars45\.com.gh[\d\-_\/\w]+\.` +
 			`(jpg|jpeg|png)`)
 		images := r810.FindAllString (imageURLDataSrc, -1)
 		lastImage := ""
@@ -837,6 +845,15 @@ if fetchCFromCache == true {
 		})
 		
 		listingImages [len (listingInformation)] = images
+		fmt.Println (onLstngGttngI [0],
+					onLstngGttngI [1],
+					year,
+					transmission,
+					condition,
+					mileage,
+					location,
+					price,
+					onLstngGttngI [2])
 	}
 }
 
